@@ -1,0 +1,22 @@
+@import "reset";
+@import "conf";
+
+body {
+  background: $bgbody;
+  color: $textColor;
+  font-family: $fontFamily;
+  font-size: $fontSize;
+}
+
+h1 {
+  color: $titleColor;
+}
+
+a {
+  color: $linkColor;
+}
+
+.container {
+  margin: 0 auto;
+  width: 960px;
+}

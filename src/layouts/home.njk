@@ -1,0 +1,19 @@
+{% extends "./default.njk" %}
+
+{% block css %}
+    <link rel="stylesheet" href="css/styles.css"/>
+{% endblock %}
+
+{% block body %}
+    <body>
+        {% include "../includes/svgsprite.njk" %}
+
+        <div class="container">
+            <main class="content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+
+        {% block endbody %}{% endblock %}
+    </body>
+{% endblock %}
