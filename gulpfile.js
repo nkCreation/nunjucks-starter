@@ -3,13 +3,15 @@ const del = require("del");
 const path = require("path");
 const plugins = require("gulp-load-plugins")();
 const browserSync = require("browser-sync").create();
-const yargs = require("yargs");
 const inputIcons = "./src/icons/*.svg";
+const datas = require("./utils/assemble-data.js");
+const sass = require("gulp-sass")(require("sass"));
+const yargs = require("yargs/yargs");
+const { hideBin } = require("yargs/helpers");
+const argv = yargs(hideBin(process.argv)).argv;
 
-const argv = yargs
-  .default("port", 1234)
-  .default("production", false)
-  .default("nosync", false).argv;
+const PORT = argv.port || 1234;
+let isProduction = argv.production || false;
 
 function clean(next) {
   del.sync(["dist"]);
@@ -20,8 +22,8 @@ function img() {
   return src(["./src/img/**/*.*"]).pipe(dest("./dist/img/"));
 }
 
-function assets() {
-  return src(["./src/assets/**/*.*"]).pipe(dest("./dist/"));
+function statics() {
+  return src(["./src/statics/**/*.*"]).pipe(dest("./dist/"));
 }
 
 function svgMin() {
@@ -29,20 +31,25 @@ function svgMin() {
     .pipe(plugins.plumber())
     .pipe(
       plugins.svgmin(function (file) {
-        var prefix = path.basename(file.relative, path.extname(file.relative));
+        const prefix = path.basename(
+          file.relative,
+          path.extname(file.relative)
+        );
+
         return {
           plugins: [
             {
-              cleanupIDs: {
-                prefix: prefix + "-",
-                minify: true,
+              name: "preset-default",
+              params: {
+                overrides: {
+                  cleanupIDs: {
+                    prefix: prefix + "-",
+                    minify: true,
+                  },
+                  removeViewBox: false,
+                  removeXMLNS: true,
+                },
               },
-            },
-            {
-              removeViewBox: false,
-            },
-            {
-              removeXMLNS: true,
             },
           ],
         };
@@ -110,7 +117,7 @@ function imgOptim() {
 
 function dev(cb) {
   browserSync.init({
-    port: 1234,
+    port: PORT,
     server: {
       baseDir: "./dist",
     },
@@ -133,16 +140,16 @@ function js() {
         presets: ["@babel/env"],
       })
     )
-    .pipe(plugins.sourcemaps.init())
+    .pipe(plugins.if(!isProduction, plugins.sourcemaps.init()))
     .pipe(
       plugins.if(
-        argv.production,
+        isProduction,
         plugins.uglify({
-          sourceMap: true,
+          sourceMap: false,
         })
       )
     )
-    .pipe(plugins.sourcemaps.write("."))
+    .pipe(plugins.if(!isProduction, plugins.sourcemaps.write(".")))
     .pipe(dest("./dist/js"))
     .pipe(
       browserSync.stream({
@@ -153,14 +160,12 @@ function js() {
 
 function scss() {
   return src("src/scss/*.scss")
-    .pipe(plugins.sourcemaps.init())
+    .pipe(plugins.if(!isProduction, plugins.sourcemaps.init()))
     .pipe(
-      plugins
-        .sass({
-          includePaths: ["node_modules"],
-          outputStyle: argv.production ? "compressed" : "expanded",
-        })
-        .on("error", plugins.sass.logError)
+      sass({
+        includePaths: ["node_modules"],
+        outputStyle: isProduction ? "compressed" : "expanded",
+      }).on("error", sass.logError)
     )
 
     .pipe(
@@ -177,25 +182,38 @@ function scss() {
     );
 }
 
-function njk(cb) {
-  return src("src/*.njk")
-    .pipe(plugins.nunjucks.compile())
+async function njk(cb) {
+  const data = await datas.read();
+  const result = src("src/*.njk")
+    .pipe(plugins.nunjucks.compile(data))
     .pipe(
       plugins.rename((path) => {
         path.extname = ".html";
       })
     )
     .pipe(dest("./dist"));
+
+  await Promise.resolve(result);
 }
 
 function prod(cb) {
-  argv.production = true;
+  isProduction = true;
   cb();
 }
 
-const compileAll = series(clean, njk, assets, svgMin, img, imgOptim, scss, js);
+function css() {
+  return src("dist/css/**/*.css")
+    .pipe(
+      plugins.purgecss({
+        content: ["dist/**/*.html"],
+      })
+    )
+    .pipe(dest("dist/css"));
+}
+
+const compileAll = series(clean, njk, statics, svgMin, img, imgOptim, scss, js);
 
 exports.scss = scss;
 
-exports.build = series(clean, prod, compileAll);
+exports.build = series(clean, prod, compileAll, css);
 exports.default = series(clean, compileAll, dev);

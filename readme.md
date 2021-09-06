@@ -28,12 +28,12 @@ To build HTML and CSS files :
 
 # Fonctionnement
 
-This starter use [Nunjucks](https://mozilla.github.io/nunjucks/) for it's templating engine. To create a page, you have to create a file in the `src` folder with the name of your page. For example `src/my-page.njk`. This will generate a file called my-page.html and you'll be able to access it in your browser.
+This starter use [Nunjucks](https://mozilla.github.io/nunjucks/) for it's templating engine. To create a page, you have to create a file in the `src/pages` folder with the name of your page. For example `src/pages/my-page.njk`. This will generate a file called my-page.html and you'll be able to access it in your browser.
 
 Nunjucks page example:
 
 ```nunjucks
-{% extends "./layouts/home.njk" %}
+{% extends "../layouts/home.njk" %}
 
 {% block content %}
     <h1>Page 1</h1>
