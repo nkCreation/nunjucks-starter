@@ -1,0 +1,34 @@
+@import "normalize.css/normalize";
+
+* {
+  &,
+  &::before,
+  &::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+html {
+  height: 100%;
+  font-size: 0.625em;
+  font-size: calc(1em * 0.625);
+}
+
+body {
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+svg.icon {
+  width: 1em;
+  height: 1em;
+  margin: 0.195em;
+}
+
+svg symbol circle,
+svg symbol path {
+  overflow: visible;
+}

@@ -1,0 +1,142 @@
+// colors 	-----------------------------------------------------------------------/
+$color1: #ed834e;
+$color2: #ebcc6e;
+$color3: #4f9e91;
+$color4: #ebe1c5;
+$color5: #2b2e3a;
+
+$bgbody: #ffffff;
+
+$titleColor: $color1;
+$textColor: rgba($color5, 0.88);
+$linkColor: $color2;
+$listColor: $color2;
+
+$fontFamily: "Poppins", Arial, Tahoma, Verdana, Helvetica, sans-serif;
+$fontSize: 1.4rem;
+
+// sizes 	-----------------------------------------------------------------------/
+$wrapperSize: 136rem;
+$hamburgerSize: 6rem;
+
+$maxWidthContent: 140rem;
+$widthContent: 94%;
+
+// breakpoints ------------------------------------------------------------------/
+$desktop: 1500px;
+$smallDesktop: 1400px;
+$bigTablet: 1024px;
+$tablet: 900px;
+$bigPhone: 720px;
+$phone: 440px;
+
+// breakpoints ------------------------------------------------------------------/
+$easeInOut: cubic-bezier(0.8, -0.2, 0.2, 1.2);
+$easeOut: cubic-bezier(0, 0.4, 0.5, 1.2);
+$easeIn: cubic-bezier(0.5, -0.2, 1, 0.6);
+
+// mixins -----------------------------------------------------------------------/
+
+// reset une list (margin et padding)
+// utilisation
+// .foo { @include resetList; }
+@mixin resetList {
+  ul,
+  li {
+    overflow: inherit;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+  }
+}
+
+// reset le style d'un button
+// button { @include resetButton; }
+@mixin resetButton {
+  appearance: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+}
+
+// helper de media queries
+// le deuxième paramètre peut être 'height' ou 'up'
+// pour appliquer une media query sur la hauteur ou bien sur l'inverse
+// (par défaut c'est plus petit que le breakpoint passé en 1er (de 0 à [breakpoint])
+// .foo {
+//   color: black;
+//
+//   @include breakpoint($bigPhone) {
+//     color: white;
+//   }
+//
+//   @include breakpoint($bigPhone, 'up') {
+//     // s'applique pour $bigPhone et + grand
+//     color: white;
+//   }
+//
+//   @include breakpoint($bigPhone $bigDesktop) {
+//     // s'appliquera entre $bigphone et $bigdesktop
+//     color: white;
+//   }
+// }
+@mixin breakpoint($point: null, $type: down width) {
+  @if ($point != null) {
+    $whichProp: "width";
+
+    @if (
+      length($type) >
+        1 and
+        (nth($type, 1) == "height" or nth($type, 2) == "height")
+    ) {
+      $whichProp: "height";
+    }
+
+    @if (length($point) > 1) {
+      $maxPoint: nth($point, 2);
+      $minPoint: nth($point, 1);
+
+      @if (nth($point, 1) > nth($point, 2)) {
+        $maxPoint: nth($point, 1);
+        $minPoint: nth($point, 2);
+      }
+
+      $finalMinPoint: $minPoint + 1;
+      $finalMaxPoint: $maxPoint;
+
+      @if (nth($type, 1) == "up" or nth($type, 2) == "up") {
+        $finalMinPoint: $minPoint;
+        $finalMaxPoint: $maxPoint - 1;
+      }
+
+      @media (min-#{$whichProp}: #{$finalMinPoint}) and (max-#{$whichProp}: #{$finalMaxPoint}) {
+        @content;
+      }
+    } @else {
+      $finalPoint: $point;
+      $finalType: "max-#{$whichProp}";
+
+      @if (length($type) > 1) {
+        @if (nth($type, 1) == "up" or nth($type, 2) == "up") {
+          $finalPoint: $point + 1;
+          $finalType: "min-#{$whichProp}";
+        }
+      } @else {
+        @if (nth($type, 1) == "up") {
+          $finalPoint: $point + 1;
+          $finalType: "min-#{$whichProp}";
+        }
+      }
+
+      @media ($finalType: #{$finalPoint}) {
+        @content;
+      }
+    }
+  } @else {
+    @warn "Unfortunately, value from first parameter : `#{$point}` - is not a valid one. "
+                + "Please use valid value.";
+  }
+}
